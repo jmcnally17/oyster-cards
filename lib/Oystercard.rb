@@ -16,12 +16,6 @@ class Oystercard
     "Your balance is £#{@balance}"
   end
 
-  def deduct(amount)
-    raise "Not enough money on the card" if overdrawn?(amount)
-    @balance -= amount
-    "Your balance is £#{@balance}"
-  end
-
   def in_journey?
     @in_journey
   end
@@ -33,9 +27,17 @@ class Oystercard
 
   def touch_out
     @in_journey = false
+    deduct(MINIMUM)
+    "Journey complete."
   end
 
 private
+
+  def deduct(amount)
+    #raise "Not enough money on the card" if overdrawn?(amount)
+    @balance -= amount
+    "Your balance is now £#{@balance}"
+  end
 
   def exceed_limit?(amount)
     @balance + amount > @limit

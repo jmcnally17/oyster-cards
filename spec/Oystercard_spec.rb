@@ -15,15 +15,19 @@ describe Oystercard do
     expect {subject.top_up(1) }.to raise_error("Top-up will exceed limit of £#{subject.limit}")
   end
 
+=begin
   it "deduct amount from balance as long as balance is sufficient" do
     subject.top_up(50)
-    expect(subject.deduct(5)).to eq "Your balance is £45"
+    expect(subject.deduct(5)).to eq "Your balance is now £45"
   end
+=end
 
+=begin
   it "prevents deduction if amount is greater than balance" do
     subject.top_up(4)
     expect{subject.deduct(5)}.to raise_error("Not enough money on the card")
   end
+=end
 
   it {is_expected.to respond_to(:in_journey?)}
 
@@ -43,5 +47,11 @@ describe Oystercard do
   it "will not touch in if balance is below the minimum fare" do
     expect { subject.touch_in }.to raise_error("Insufficient balance")
   end
-  
+
+  it "will deduct the minimum fare when a journey is complete (touching out)" do
+    subject.top_up(5)
+    subject.touch_in
+    expect { subject.touch_out }.to change{ subject.balance }.by(-1)
+  end
+
 end
