@@ -31,27 +31,29 @@ describe Oystercard do
 
   it {is_expected.to respond_to(:in_journey?)}
 
-  it "is 'in journey' if it has been touched in" do
-    subject.top_up(5)
-    subject.touch_in
-    expect(subject.in_journey?).to be true
-  end
-
-  it "is not 'in journey' if it has been touched out" do
-    subject.top_up(5)
-    subject.touch_in
-    subject.touch_out
-    expect(subject.in_journey?).to be false
-  end
-
   it "will not touch in if balance is below the minimum fare" do
     expect { subject.touch_in }.to raise_error("Insufficient balance")
   end
 
-  it "will deduct the minimum fare when a journey is complete (touching out)" do
-    subject.top_up(5)
-    subject.touch_in
-    expect { subject.touch_out }.to change{ subject.balance }.by(-1)
+  describe "with positive balance and touched in" do 
+    before (:each) do
+      subject.top_up(5)
+      subject.touch_in
+    end
+
+    it "is 'in journey'" do
+      expect(subject.in_journey?).to be true
+    end
+
+    it "is not 'in journey' if it has been touched out" do
+      subject.touch_out
+      expect(subject.in_journey?).to be false
+    end
+
+    it "will deduct the minimum fare when a journey is complete (touching out)" do
+      expect { subject.touch_out }.to change{ subject.balance }.by(-1)
+    end
+
   end
 
 end
