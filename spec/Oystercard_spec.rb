@@ -1,6 +1,7 @@
 require_relative '../lib/Oystercard.rb'
 
 describe Oystercard do
+  let (:station) { double (:station) }
 
   it "has a balance when created" do
     expect(subject.balance).to eq 0
@@ -32,13 +33,18 @@ describe Oystercard do
   it {is_expected.to respond_to(:in_journey?)}
 
   it "will not touch in if balance is below the minimum fare" do
-    expect { subject.touch_in }.to raise_error("Insufficient balance")
+    expect { subject.touch_in(:station) }.to raise_error("Insufficient balance")
+  end
+
+  it "remembers the entry station after touching in" do
+    subject.top_up(5)
+    expect { subject.touch_in(:station) }.to change{ subject.entry_station }.to(:station)
   end
 
   describe "with positive balance and touched in" do 
     before (:each) do
       subject.top_up(5)
-      subject.touch_in
+      subject.touch_in(:station)
     end
 
     it "is 'in journey'" do
