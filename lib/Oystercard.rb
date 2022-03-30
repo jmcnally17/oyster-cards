@@ -2,15 +2,15 @@ require_relative './journey'
 require_relative './station'
 
 class Oystercard
-  attr_reader :balance, :limit, :entry_station, :journeys, :current_journey
+  attr_reader :balance, :limit, :journeys, :current_journey
 
   LIMIT = 90.0
   MINIMUM = 1.0
+  PENALTY_FARE = 6.0
   
   def initialize
     @balance = 0.0
     @limit = LIMIT
-    @entry_station = nil
     @journeys = []
     @current_journey = nil
   end
@@ -22,25 +22,30 @@ class Oystercard
   end
 
   def in_journey?
-    @entry_station != nil
+    @current_journey != nil
   end
 
   def touch_in(station)
     fail "Insufficient balance" if insufficient_balance?
-    @entry_station = station
+    journey = Journey.new(station)
+    @current_journey = journey
   end
 
   def touch_out(station)
-    deduct(MINIMUM)
-    create_journey(@entry_station, station)
-    "Journey complete."
-    @entry_station = nil
+    if @current_journey == nil
+      @current_journey = Journey.new(:unknown)
+      deduct(PENALTY_FARE)
+    else
+      deduct(MINIMUM)
+    end
+    @current_journey.end_journey(station)
+    journeys.push(@current_journey)
+    @current_journey = nil
   end
 
 private
 
   def deduct(amount)
-    #raise "Not enough money on the card" if overdrawn?(amount)
     @balance -= amount
     "Your balance is now £#{@balance}"
   end
@@ -49,17 +54,7 @@ private
     @balance + amount > @limit
   end
 
-=begin
-  def overdrawn?(amount)
-    @balance < amount
-  end
-=end
-
   def insufficient_balance?
     @balance < MINIMUM
-  end
-
-  def create_journey(entry_station, exit_station)
-    @journeys.push({ in_station: entry_station, out_station: exit_station })
   end
 end

@@ -72,4 +72,15 @@ describe Oystercard do
       expect(subject.journeys[-1]).to be_an_instance_of(Journey)
     end
   end
+
+  context "penalty fares" do
+    it 'deducts the penalty fare from balance' do
+      expect { subject.touch_out(station2) }.to change{ subject.balance }.by(-6.0)
+    end
+
+    it "logs the penalty journey" do
+      subject.touch_out(station2)
+      expect(subject.journeys[-1]).to be_an_instance_of(Journey)
+    end
+  end
 end
