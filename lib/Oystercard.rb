@@ -1,18 +1,18 @@
 class Oystercard
   attr_reader :balance, :limit, :entry_station
 
-  LIMIT = 90
-  MINIMUM = 1
+  LIMIT = 90.0
+  MINIMUM = 1.0
   
   def initialize
-    @balance = 0
+    @balance = 0.0
     @limit = LIMIT
     @entry_station = nil
   end
 
   def top_up(amount)
     raise "Top-up will exceed limit of £#{@limit}" if exceed_limit?(amount)
-    @balance += amount
+    @balance += amount.to_f
     "Your balance is £#{@balance}"
   end
 
@@ -43,9 +43,11 @@ private
     @balance + amount > @limit
   end
 
+=begin
   def overdrawn?(amount)
     @balance < amount
   end
+=end
 
   def insufficient_balance?
     @balance < MINIMUM

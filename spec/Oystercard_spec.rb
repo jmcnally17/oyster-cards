@@ -4,11 +4,11 @@ describe Oystercard do
   let (:station) { double (:station) }
 
   it "has a balance when created" do
-    expect(subject.balance).to eq 0
+    expect(subject.balance).to eq 0.0
   end
 
-  it "can have the balance topped up" do
-    expect(subject.top_up(5)).to eq "Your balance is £5"
+  it "can update the balance topped up" do
+    expect(subject.top_up(5)).to eq "Your balance is £5.0"
   end
 
   it "has a maximum balance of £90" do
@@ -41,7 +41,7 @@ describe Oystercard do
     expect { subject.touch_in(:station) }.to change{ subject.entry_station }.to(:station)
   end
 
-  describe "with positive balance and touched in" do 
+  context "with positive balance and touched in" do 
     before (:each) do
       subject.top_up(5)
       subject.touch_in(:station)
