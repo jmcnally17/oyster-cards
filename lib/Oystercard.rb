@@ -1,5 +1,8 @@
+require_relative './journey'
+require_relative './station'
+
 class Oystercard
-  attr_reader :balance, :limit, :entry_station, :journeys
+  attr_reader :balance, :limit, :entry_station, :journeys, :current_journey
 
   LIMIT = 90.0
   MINIMUM = 1.0
@@ -9,6 +12,7 @@ class Oystercard
     @limit = LIMIT
     @entry_station = nil
     @journeys = []
+    @current_journey = nil
   end
 
   def top_up(amount)
