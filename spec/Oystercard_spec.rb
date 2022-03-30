@@ -2,9 +2,14 @@ require_relative '../lib/Oystercard.rb'
 
 describe Oystercard do
   let (:station) { double (:station) }
+  let (:station2) { double (:station) }
 
   it "has a balance when created" do
     expect(subject.balance).to eq 0.0
+  end
+
+  it "doesn't have any saved journeys" do
+    expect(subject.journeys).to eq []
   end
 
   it "can update the balance topped up" do
@@ -44,7 +49,7 @@ describe Oystercard do
   context "with positive balance and touched in" do 
     before (:each) do
       subject.top_up(5)
-      subject.touch_in(:station)
+      subject.touch_in(station)
     end
 
     it "is 'in journey'" do
@@ -52,14 +57,24 @@ describe Oystercard do
     end
 
     it "is not 'in journey' if it has been touched out" do
-      subject.touch_out
+      subject.touch_out(station2)
       expect(subject.in_journey?).to be false
     end
-
-    it "will deduct the minimum fare when a journey is complete (touching out)" do
-      expect { subject.touch_out }.to change{ subject.balance }.by(-1)
-    end
-
   end
 
+  context "when touching out at the end of a journey" do
+    before (:each) do
+      subject.top_up(5)
+      subject.touch_in(station)
+    end
+
+    it "will deduct the minimum fare" do
+      expect { subject.touch_out(station2) }.to change{ subject.balance }.by(-1)
+    end
+
+    it "logs the entire journey" do
+      subject.touch_out(station2)
+      expect(subject.journeys).to include ( { in_station: station, out_station: station2 } )
+    end
+  end
 end

@@ -31,7 +31,7 @@ I want a maximum limit (of £90) on my card
 
 ## Functional representation of user stories
 
-See the [wireframe](https://wireframe.cc/u3u8jN).
+See the [wireframe](https://wireframe.cc/AmgxLr).
 
 ----------------------------------------------
 
