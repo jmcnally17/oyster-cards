@@ -6,58 +6,51 @@ describe Oystercard do
   let (:station2) { double (:station) }
   let (:journey) { double (:journey) }
 
-  it "has a balance when created" do
-    expect(subject.balance).to eq 0.0
+  context "when created" do
+    it "has a balance" do
+      expect(subject.balance).to eq 0.0
+    end
+
+    it "current journey is nil" do
+      expect(subject.current_journey).to eq nil
+    end
+
+    it "doesn't have any saved journeys" do
+      expect(subject.journeys).to eq []
+    end
+
+    it {is_expected.to respond_to(:in_journey?)}
   end
 
-  it "current journey is nil when created" do
-    expect(subject.current_journey).to eq nil
+  context "#top_up" do
+    it "can update the balance" do
+      expect { subject.top_up(5) }.to change { subject.balance }.by(5.0)
+    end
+
+    it "has a maximum balance of £90" do
+      subject.top_up(subject.limit)
+      expect {subject.top_up(1) }.to raise_error("Top-up will exceed limit of £#{subject.limit}")
+    end
   end
 
-  it "doesn't have any saved journeys" do
-    expect(subject.journeys).to eq []
-  end
+  context "#touch_in" do
+    it "will not start journey if balance is below the minimum fare" do
+      expect { subject.touch_in(:station) }.to raise_error("Insufficient balance")
+    end
 
-  it "can update the balance topped up" do
-    expect(subject.top_up(5)).to eq "Your balance is £5.0"
-  end
+    it "creates a new journey" do
+      subject.top_up(5)
+      expect(subject.touch_in(station)).to be_an_instance_of(Journey)
+    end
 
-  it "has a maximum balance of £90" do
-    subject.top_up(subject.limit)
-    expect {subject.top_up(1) }.to raise_error("Top-up will exceed limit of £#{subject.limit}")
-  end
-
-  it {is_expected.to respond_to(:in_journey?)}
-
-  it "will not touch in if balance is below the minimum fare" do
-    expect { subject.touch_in(:station) }.to raise_error("Insufficient balance")
-  end
-
-  it "creates a new journey when touching in" do
-    subject.top_up(5)
-    expect(subject.touch_in(station)).to be_an_instance_of(Journey)
-    #expect { subject.touch_in(:station) }.to change{ subject.entry_station }.to(:station)
-  end
-
-  context "with positive balance and touched in" do 
-    before (:each) do
+    it "makes the card in journey'" do
       subject.top_up(5)
       subject.touch_in(station)
-    end
-
-    it "is 'in journey'" do
-      allow(journey).to receive(:complete?).and_return(false)
       expect(subject.in_journey?).to be true
-    end
-
-    it "is not 'in journey' if it has been touched out" do
-      allow(journey).to receive(:complete?).and_return(true)
-      subject.touch_out(station2)
-      expect(subject.in_journey?).to be false
     end
   end
 
-  context "when touching out at the end of a journey" do
+  context "#touch_out" do
     before (:each) do
       subject.top_up(5)
       subject.touch_in(station)
@@ -71,15 +64,33 @@ describe Oystercard do
       subject.touch_out(station2)
       expect(subject.journeys[-1]).to be_an_instance_of(Journey)
     end
+
+    it "makes the card not in journey" do
+      subject.touch_out(station2)
+      expect(subject.in_journey?).to be false
+    end
   end
 
   context "penalty fares" do
-    it 'deducts the penalty fare from balance' do
+    it 'deducts the penalty fare from balance when forgetting to touch in' do
       expect { subject.touch_out(station2) }.to change{ subject.balance }.by(-6.0)
     end
 
-    it "logs the penalty journey" do
+    it "logs the penalty journey when forgetting to touch in" do
       subject.touch_out(station2)
+      expect(subject.journeys[-1]).to be_an_instance_of(Journey)
+    end
+
+    it 'deducts the penalty fare from balance when forgetting to touch out' do
+      subject.top_up(30)
+      subject.touch_in(:Euston)
+      expect { subject.touch_in(:Stratford) }.to change{ subject.balance }.by(-6.0)
+    end
+
+    it 'logs the penalty journey when forgetting to touch out' do
+      subject.top_up(30)
+      subject.touch_in(:Euston)
+      subject.touch_in(:Stratford)
       expect(subject.journeys[-1]).to be_an_instance_of(Journey)
     end
   end

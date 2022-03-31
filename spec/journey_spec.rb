@@ -13,12 +13,17 @@ describe Journey do
   end
 
   it "sets 'complete' to false when created" do
-    expect(journey.complete?).to be false
+    expect(journey).not_to be_complete
   end
 
   context "#end_journey" do
     it "updates the exit station to the argument that is passed" do
       expect { journey.end_journey(exit_station) }.to change{ journey.exit_station }.to(exit_station)
+    end
+
+    it "sets 'complete' to true" do
+      journey.end_journey(exit_station)
+      expect(journey).to be_complete
     end
   end
 end

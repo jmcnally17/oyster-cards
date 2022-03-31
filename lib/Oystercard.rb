@@ -5,8 +5,6 @@ class Oystercard
   attr_reader :balance, :limit, :journeys, :current_journey
 
   LIMIT = 90.0
-  MINIMUM = 1.0
-  PENALTY_FARE = 6.0
   
   def initialize
     @balance = 0.0
@@ -18,7 +16,6 @@ class Oystercard
   def top_up(amount)
     raise "Top-up will exceed limit of £#{@limit}" if exceed_limit?(amount)
     @balance += amount.to_f
-    "Your balance is £#{@balance}"
   end
 
   def in_journey?
@@ -26,28 +23,23 @@ class Oystercard
   end
 
   def touch_in(station)
-    fail "Insufficient balance" if insufficient_balance?
-    journey = Journey.new(station)
-    @current_journey = journey
+    check_penalty_in
+    raise "Insufficient balance" if insufficient_balance?
+    @current_journey = Journey.new(station)
   end
 
   def touch_out(station)
-    if @current_journey == nil
-      @current_journey = Journey.new(:unknown)
-      deduct(PENALTY_FARE)
-    else
-      deduct(MINIMUM)
-    end
+    check_penalty_out
     @current_journey.end_journey(station)
-    journeys.push(@current_journey)
+    deduct
+    @journeys.push(@current_journey)
     @current_journey = nil
   end
 
 private
 
-  def deduct(amount)
-    @balance -= amount
-    "Your balance is now £#{@balance}"
+  def deduct
+    @balance -= @current_journey.fare
   end
 
   def exceed_limit?(amount)
@@ -55,6 +47,24 @@ private
   end
 
   def insufficient_balance?
-    @balance < MINIMUM
+    @balance < Journey::MINIMUM
+  end
+
+  def check_penalty_in
+    apply_penalty_in if @current_journey != nil
+  end
+
+  def apply_penalty_in
+    @current_journey.end_journey(:unknown)
+    deduct
+    @journeys.push(@current_journey)
+  end
+
+  def check_penalty_out
+    apply_penalty_out if @current_journey == nil
+  end
+
+  def apply_penalty_out
+    @current_journey = Journey.new(:unknown)
   end
 end
